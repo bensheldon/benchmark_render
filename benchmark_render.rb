@@ -85,7 +85,7 @@ RailsApplication.initialize!
 app = Rack::Builder.new_from_string("run Rails.application")
 
 ActionView::Base.logger = nil if ENV['WITHOUT_LOGGER']
-ActiveSupport::Notifications.unsubscribe 'render_partial.action_view'
+# ActiveSupport::Notifications.unsubscribe 'render_partial.action_view'
 
 make_request = -> (path) {
   env = Rack::MockRequest.env_for("http://localhost/#{path}")
