@@ -10,6 +10,8 @@ Run benchmarks against multiple versions of Rails:
 
 =end
 
+# frozen_string_literal: true
+
 require "bundler/inline"
 
 ENV['BUNDLE_PATH'] = "vendor/bundle"
@@ -19,6 +21,7 @@ gemfile(VERBOSE) do
   source 'https://rubygems.org'
   gem 'stackprof'
   gem 'view_component'
+  gem 'phlex-rails'
   gem 'benchmark-ips'
   gem 'rails', ENV.fetch("RAILS_VERSION", { github: 'rails/rails' })
 end
@@ -54,6 +57,7 @@ class RailsApplication < Rails::Application
       get :nested_loop_path
       get :nested_collection
       get :vc_loop
+      get :phlex_loop
     end
   end
 end
@@ -75,9 +79,27 @@ class PagesController < ActionController::Base
 
   def vc_loop
   end
+
+  def phlex_loop
+    render PhlexLoop.new
+  end
 end
 
 class EggComponent < ViewComponent::Base
+end
+
+class PhlexLoop < Phlex::HTML
+  def template
+    10.times do
+      render PhlexEgg.new
+    end
+  end
+end
+
+class PhlexEgg < Phlex::HTML
+  def template
+    plain "Hardboiled!"
+  end
 end
 
 RailsApplication.initialize!
@@ -106,6 +128,7 @@ if VERBOSE
   p make_request.call("page/nested_loop_path").last
   p make_request.call("page/nested_collection").last
   p make_request.call("page/vc_loop").last
+  p make_request.call("page/phlex_loop").last
 end
 
 Benchmark.ips do |x|
@@ -129,6 +152,9 @@ Benchmark.ips do |x|
     make_request.call("page/vc_loop")
   end
 
+  x.report "/phlex_loop" do
+    make_request.call("page/phlex_loop")
+  end
+
   x.compare!
 end
-
